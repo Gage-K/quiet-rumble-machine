@@ -1,0 +1,18 @@
+#container {
+    display: grid;
+    grid-template-columns: repeat(29, 1fr);
+    /* 29 for now */
+    grid-template-rows: repeat(29, 1fr);
+    /* 29 for now */
+    width: 500px;
+    height: 500px;
+    /* background-color: #000; */
+}
+
+.black {
+    background-color: #5500ff;
+}
+
+.white {
+    background-color: #e8e8e8;
+}

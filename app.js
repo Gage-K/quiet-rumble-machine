@@ -1,6 +1,6 @@
 console.log("hello world, ready to rumble");
 
-var typeNumber = 3; // size or version -- from 1 (21) to 40 (177)
+var typeNumber = 4; // size or version -- from 1 (21) to 40 (177)
 var errorCorrectionLevel = 'H';
 var qr = qrcode(typeNumber, errorCorrectionLevel);
 

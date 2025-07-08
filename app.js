@@ -1,12 +1,9 @@
 import config from "./config/qr-config.js";
 
-var qr = qrcode(config.typeNumber, config.errorCorrection);
+const qr = qrcode(config.typeNumber, config.errorCorrection);
 
 qr.addData("https://www.google.com");
 qr.make();
-
-console.log(qr.getModuleCount()); // 177 for 40, pixels inone direction
-// document.getElementById('placeHolder').innerHTML = qr.createImgTag(); // print qr code for reference
 
 const size = qr.getModuleCount();
 
@@ -35,14 +32,10 @@ function getPixels2D(qr) {
   return qrPixels2D;
 }
 
-let qrPixels = getPixels(qr);
-let qrPixels2D = getPixels2D(qr);
-console.log(qrPixels2D);
-console.table(qrPixels);
+const qrPixels = getPixels(qr);
+const qrPixels2D = getPixels2D(qr);
 
 const container = document.getElementById("container");
-
-const pixelElement = document.createElement("div");
 
 for (let row = 0; row < size; row++) {
   for (let col = 0; col < size; col++) {

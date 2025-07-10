@@ -1,114 +1,201 @@
 import config from "./config/qr-config.js";
 
-const qr = qrcode(config.typeNumber, config.errorCorrection);
+class QRSequencer {
+  constructor(containerId, options = {}) {
+    this.container = document.getElementById(containerId);
+    this.options = {
+      steps: 16,
+      numTracks: 4,
+      url: "https://www.google.com",
+      ...options,
+    };
 
-qr.addData("https://www.google.com");
-qr.make();
-
-const size = qr.getModuleCount();
-
-// 1D array - goes down each column for moduleCount amounts of pixels, then across the row
-function getPixels(qr) {
-  let qrPixels = [];
-  for (let i = 0; i < size; i++) {
-    // colums
-    for (let j = 0; j < size; j++) {
-      // rows?
-      qrPixels.push(qr.isDark(j, i));
-    }
+    this.qr = null;
+    this.size = 0;
+    this.qrNodes = null;
+    this.sequencerState = Array.from({ length: this.options.numTracks }, () =>
+      Array(this.options.steps).fill(false)
+    );
+    this.init();
   }
-  return qrPixels;
-}
 
-// 2d array! [row][col]
-function getPixels2D(qr) {
-  const qrPixels2D = [];
-  for (let row = 0; row < size; row++) {
-    qrPixels2D[row] = [];
-    for (let col = 0; col < size; col++) {
-      qrPixels2D[row][col] = qr.isDark(row, col);
-    }
+  init() {
+    this.generateQR();
+    this.createQRGrid();
   }
-  return qrPixels2D;
-}
 
-const qrPixels = getPixels(qr);
-const qrPixels2D = getPixels2D(qr);
+  generateQR() {
+    this.qr = qrcode(config.typeNumber, config.errorCorrection);
+    this.qr.addData(this.options.url);
+    this.qr.make();
+    this.size = this.qr.getModuleCount();
+    this.qrNodes = this.getQRNodes();
+  }
 
-const container = document.getElementById("container");
-
-const steps = 16;
-const numTracks = 4;
-
-// for (let i = 0; i < numTracks; i++) {
-//   const trackContainer = document.createElement("div");
-//   trackContainer.classList.add("track");
-//   trackContainer.classList.add(`track-${i + 1}`);
-//   for (let j = 0; j < steps; j++) {
-//     if (j === steps / 2) {
-//       const spacer = document.createElement("span");
-//       spacer.classList.add("spacer");
-//       trackContainer.appendChild(spacer);
-//     }
-//     const stepButton = document.createElement("button");
-//     stepButton.classList.add("step-button");
-//     stepButton.classList.add(`step-${j + 1}`);
-//     trackContainer.appendChild(stepButton);
-//   }
-//   container.appendChild(trackContainer);
-// }
-
-// x = 8–25
-// y = 8–12
-
-function createQRGrid() {
-  for (let row = 0; row < size; row++) {
-    for (let col = 0; col < size; col++) {
-      if (col >= 7 && col < 26) {
-        if (row >= 7 && row < 13) {
-          if (col === 7 || col === 25 || row === 7 || row === 12) {
-            const pixelElement = document.createElement("div");
-            pixelElement.classList.add("sequencer-border");
-            container.appendChild(pixelElement);
-            continue;
-          }
-
-          if (col === Math.floor(size / 2)) {
-            const spacer = document.createElement("span");
-            spacer.classList.add("spacer");
-            container.appendChild(spacer);
-            continue;
-          }
-
-          const pixelElement = document.createElement("button");
-          pixelElement.classList.add("step");
-          container.appendChild(pixelElement);
-          continue;
-        }
+  getQRNodes() {
+    const qrNodes = [];
+    for (let row = 0; row < this.size; row++) {
+      qrNodes[row] = [];
+      for (let col = 0; col < this.size; col++) {
+        qrNodes[row][col] = this.qr.isDark(row, col);
       }
-
-      const pixelElement = document.createElement("div");
-      qrPixels2D[row][col] === true
-        ? pixelElement.classList.add("qr-brick-on")
-        : pixelElement.classList.add("qr-brick-off");
-      container.appendChild(pixelElement);
     }
+    return qrNodes;
+  }
+
+  isSequencerBorder(row, col) {
+    const { startRow, endRow, startCol, endCol } = this.getSequencerBounds();
+    return (
+      (col === startCol ||
+        col === endCol ||
+        row === startRow ||
+        row === endRow) &&
+      this.isInSequencerArea(row, col)
+    );
+  }
+
+  isSequencerSpacer(row, col) {
+    const { startRow, endRow } = this.getSequencerBounds();
+    return (
+      col === Math.floor(this.size / 2) && row >= startRow && row <= endRow
+    );
+  }
+
+  isSequencerStep(row, col) {
+    const { startRow, endRow, startCol, endCol } = this.getSequencerBounds();
+    return col > startCol && col < endCol && row > startRow && row < endRow;
+  }
+
+  isInSequencerArea(row, col) {
+    const { startRow, endRow, startCol, endCol } = this.getSequencerBounds();
+    return col >= startCol && col <= endCol && row >= startRow && row <= endRow;
+  }
+
+  getSequencerBounds() {
+    return {
+      startRow: 7,
+      endRow: 12,
+      startCol: 7,
+      endCol: 25,
+    };
+  }
+
+  toggleStep(stepButton, trackIndex, stepIndex) {
+    stepButton.classList.toggle("active-step");
+    this.sequencerState[trackIndex][stepIndex] =
+      !this.sequencerState[trackIndex][stepIndex];
+    this.onSequencerChange(this.sequencerState);
+  }
+
+  onSequencerChange(state) {
+    console.log("Sequencer state updated:", state);
+  }
+
+  createStepButton(row, col) {
+    const stepButton = document.createElement("button");
+    stepButton.setAttribute("aria-label", `Step ${col - 7} Track ${row - 7}`);
+    stepButton.classList.add("step");
+
+    const stepIndex = col - 8;
+    const trackIndex = row - 8;
+    stepButton.addEventListener("click", () =>
+      this.toggleStep(stepButton, trackIndex, stepIndex)
+    );
+    return stepButton;
+  }
+
+  createQRNode(row, col) {
+    const qrNode = document.createElement("div");
+    qrNode.classList.add(
+      this.qrNodes[row][col] ? "qr-brick-on" : "qr-brick-off"
+    );
+    qrNode.setAttribute("aria-hidden", "true");
+    return qrNode;
+  }
+
+  createBorderElement() {
+    const borderDiv = document.createElement("div");
+    borderDiv.classList.add("sequencer-border");
+    borderDiv.setAttribute("aria-hidden", "true");
+    return borderDiv;
+  }
+
+  createSpacerElement() {
+    const spacer = document.createElement("span");
+    spacer.classList.add("spacer");
+    spacer.setAttribute("aria-hidden", "true");
+    return spacer;
+  }
+
+  createQRGrid() {
+    if (!this.container) {
+      throw new Error("Container could not be found. Abort!");
+    }
+
+    this.container.innerHTML = "";
+
+    let element;
+
+    for (let row = 0; row < this.size; row++) {
+      for (let col = 0; col < this.size; col++) {
+        if (this.isSequencerBorder(row, col)) {
+          element = this.createBorderElement();
+        } else if (this.isSequencerSpacer(row, col)) {
+          element = this.createSpacerElement();
+        } else if (this.isSequencerStep(row, col)) {
+          element = this.createStepButton(row, col);
+        } else {
+          element = this.createQRNode(row, col);
+        }
+
+        this.container.appendChild(element);
+      }
+    }
+  }
+
+  getSequencerState() {
+    return [...this.sequencerState.map((track) => [...track])];
+  }
+
+  setSequencerState(newState) {
+    if (newState.length !== this.options.numTracks) {
+      throw new Error("Invalid number of tracks!");
+    }
+
+    this.sequencerState = newState.map((track) => [...track]);
+    this.updateUI();
+  }
+
+  updateUI() {
+    const stepButtons = this.container.querySelectorAll(".step");
+    stepButtons.forEach((button, index) => {
+      const trackIndex = Math.floor(index / this.options.steps);
+      const stepIndex = index % this.options.steps;
+
+      if (this.sequencerState[trackIndex][stepIndex]) {
+        button.classList.add("active-step");
+      } else {
+        button.classList.remove("active-step");
+      }
+    });
+  }
+
+  clearSequencer() {
+    this.sequencerState = Array.from({ length: this.options.numTracks }, () =>
+      Array(this.options.steps).fill(false)
+    );
+    this.updateUI();
+  }
+
+  updateQRCode(newUrl) {
+    this.options.url = newUrl;
+    this.generateQR();
+    this.createQRGrid();
   }
 }
 
-function addStepClicks() {
-  const buttonSteps = document.querySelectorAll("button");
-  buttonSteps.forEach((step) => {
-    step.addEventListener("click", () => {
-      // if (step.classList.contains("active-step")) {
-      //   step.classList.toggle("active-step");
-      // }
-      step.classList.toggle("active-step");
-    });
-  });
-  console.log(buttonSteps);
-}
-
-createQRGrid();
-addStepClicks();
-// console.table(getPixels(qr));
+const qrSequencer = new QRSequencer("container", {
+  url: "https://www.google.com", // Use 'url' not 'qrUrl'
+  steps: 16,
+  numTracks: 4,
+});

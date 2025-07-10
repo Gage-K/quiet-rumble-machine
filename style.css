@@ -139,6 +139,17 @@ table {
   /* background-color: #000; */
 }
 
+.page-container {
+  padding: 0 30vw;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  font-family: monospace;
+  margin: auto;
+}
+
 button {
   outline: none;
   text-decoration: none;
@@ -161,9 +172,6 @@ button {
 
 .active-step {
   background-color: #5901ce;
-}
-
-.step:checked {
 }
 
 .spacer {

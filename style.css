@@ -140,7 +140,7 @@ table {
 }
 
 .page-container {
-  padding: 0 30vw;
+  /* padding: 0 30vw; */
 }
 
 h1 {
@@ -176,4 +176,13 @@ button {
 
 .spacer {
   background-color: #010ece;
+}
+
+.sequence-cursor {
+  background-color: yellow;
+  opacity: 0.5;
+}
+
+.invertColors {
+  filter: invert(90%);
 }

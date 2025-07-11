@@ -27,14 +27,27 @@ function convertDataToBinary(data) {
 }
 
 function convertHexToBinary(hexString) {
-  return parseInt(hexString, 16).toString(2);
+  // const convertedBinary = parseInt(hexString, 16).toString(2);
+  // console.log("hexString convertHexToBinary", hexString);
+  // console.log("convertedBinary", convertedBinary); // wrong somehow
+
+  let binaryString = "";
+  for (let i = 0; i < hexString.length; i++) {
+    const hexChar = hexString[i];
+    const binaryChunk = parseInt(hexChar, 16).toString(2).padStart(4, "0");
+    binaryString += binaryChunk;
+  }
+  console.log("binaryString convertHexToBinary", binaryString);
+  return binaryString;
 }
 
 function decodeFromHex(hexString) {
   const binaryString = convertHexToBinary(hexString);
   const numSteps = 16;
-  const numTracks = binaryString.length % numSteps;
-  console.log(numTracks);
+  const numTracks = Math.floor(binaryString.length / numSteps);
+  console.log("binaryString decode", binaryString);
+  console.log("binaryString.length", binaryString.length);
+  console.log("numTracks", numTracks);
   const outputArray = [];
 
   for (let i = 0; i < numTracks; i++) {

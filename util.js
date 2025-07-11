@@ -8,11 +8,8 @@ function encodeToHex(data) {
   for (let i = 0; i < binaryString.length; i += 4) {
     const chunk = binaryString.slice(i, i + 4); // get 4 bits at a time
     const paddedChunk = chunk.padEnd(4, "0"); // Pad if needed
-    // console.log(paddedChunk);
     hexString += parseInt(paddedChunk, 2).toString(16);
   }
-  // console.log("binaryString", binaryString);
-  // console.log("encoded hex string", hexString);
   return hexString;
 }
 
@@ -27,10 +24,6 @@ function convertDataToBinary(data) {
 }
 
 function convertHexToBinary(hexString) {
-  // const convertedBinary = parseInt(hexString, 16).toString(2);
-  // console.log("hexString convertHexToBinary", hexString);
-  // console.log("convertedBinary", convertedBinary); // wrong somehow
-
   let binaryString = "";
   for (let i = 0; i < hexString.length; i++) {
     const hexChar = hexString[i];

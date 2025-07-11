@@ -232,16 +232,25 @@ const stopButton = document.getElementById("stop-button");
 
 playButton.addEventListener("click", () => {
   startMusic();
+  playButton.style.display = "none";
+  stopButton.style.display = "block";
 });
 
 stopButton.addEventListener("click", () => {
   stopMusic();
+  playButton.style.display = "block";
+  stopButton.style.display = "none";
 });
 
+let loop = null;
+
 function startMusic() {
+  if (loop) {
+    loop.dispose();
+  }
   let stepIndex = 0;
 
-  const loop = new Tone.Loop((time) => {
+  loop = new Tone.Loop((time) => {
     // steping colorz
     const getVisualColumnIndex = (step) => {
       // If step is past the spacer position, add 1 to skip over it
@@ -288,7 +297,14 @@ function startMusic() {
 }
 
 function stopMusic() {
+  if (loop) {
+    loop.dispose();
+    loop = null;
+  }
   Tone.getTransport().stop();
+  // clear the colorz
+  const colorz = document.querySelectorAll(".invertColors");
+  colorz.forEach((node) => node.classList.remove("invertColors"));
   createHashString();
   updateHash();
 }

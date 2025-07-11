@@ -1,7 +1,8 @@
 import config from "./config/qr-config.js";
+import { encodeToHex, decodeFromHex } from "./util.js";
 console.log(config.baseUrl);
 
-let hashString = "";
+let binaryString = "";
 
 class QRSequencer {
   constructor(containerId, options = {}) {
@@ -93,8 +94,8 @@ class QRSequencer {
   onSequencerChange(state) {
     // put the hash function here
     updateHash();
-    console.log(createHashString());
-    console.log("Sequencer state updated:", state);
+    console.log(createBinaryString()); // this is wrong
+    console.log("Sequencer state updated:", state); // state also wrong
   }
 
   createStepButton(row, col) {
@@ -103,7 +104,10 @@ class QRSequencer {
     stepButton.setAttribute("aria-label", `Step ${col - 7} Track ${row - 7}`);
     stepButton.classList.add("step");
 
-    const stepIndex = col - 8;
+    // handle the spacer
+    // if col is greater than 16, subtract 9 for spacer
+    const spacerCol = Math.floor(this.size / 2); // column 16
+    const stepIndex = col >= spacerCol ? col - 9 : col - 8;
     const trackIndex = row - 8;
     stepButton.addEventListener("click", () =>
       this.toggleStep(stepButton, trackIndex, stepIndex)
@@ -170,21 +174,10 @@ class QRSequencer {
     }
 
     this.sequencerState = newState.map((track) => [...track]);
-    this.updateUI();
+    console.log("sequencer state set!")
+    console.log("newState", newState);
   }
 
-  updateUI() {
-    const stepButtons = this.container.querySelectorAll(".step");
-    // stepButtons.forEach((button, index) => {
-    //   // const trackIndex = Math.floor(index / this.options.steps);
-    //   // const stepIndex = index % this.options.steps;
-    //   // if (this.sequencerState[trackIndex][stepIndex]) {
-    //   //   button.classList.add("active-step");
-    //   // } else {
-    //   //   button.classList.remove("active-step");
-    //   // }
-    // });
-  }
 
   updateSequenceCursor(currentStep) {
     const column = currentStep + 8;
@@ -198,7 +191,6 @@ class QRSequencer {
     this.sequencerState = Array.from({ length: this.options.numTracks }, () =>
       Array(this.options.steps).fill(false)
     );
-    this.updateUI();
   }
 
   updateQRCode(newUrl) {
@@ -208,11 +200,32 @@ class QRSequencer {
   }
 }
 
-const qrSequencer = new QRSequencer("container", {
+let qrSequencer = new QRSequencer("container", {
   url: `${config.baseUrl}`, // Use 'url' not 'qrUrl'
   steps: 16,
   numTracks: 4,
 });
+
+// update grid based on new sequencer state
+function updateGrid() {
+  const stepButtons = qrSequencer.container.querySelectorAll(".step");
+  let buttonIndex = 0;
+
+  for (let trackIndex = 0; trackIndex < qrSequencer.options.numTracks; trackIndex++) {
+    for (let stepIndex = 0; stepIndex < qrSequencer.options.steps; stepIndex++) {
+      if (buttonIndex < stepButtons.length) {
+        const button = stepButtons[buttonIndex];
+        if (qrSequencer.sequencerState[trackIndex][stepIndex]) {
+          button.classList.add("active-step");
+        } else {
+          button.classList.remove("active-step");
+        }
+        buttonIndex++;
+      }
+    }
+  }
+}
+
 
 const kick = new Tone.Player(
   "https://tonejs.github.io/audio/drum-samples/Kit8/kick.mp3"
@@ -305,33 +318,43 @@ function stopMusic() {
   // clear the colorz
   const colorz = document.querySelectorAll(".invertColors");
   colorz.forEach((node) => node.classList.remove("invertColors"));
-  createHashString();
-  updateHash();
+  updateQR();
 }
 
-function createHashString() {
-  hashString = "";
-  for (let i = 0; i < qrSequencer.options.numTracks; i++) {
-    for (let j = 0; j < qrSequencer.options.steps; j++) {
-      if (qrSequencer.sequencerState[i][j] === true) {
-        hashString += 1;
-      } else {
-        hashString += 0;
-      }
-    }
-  }
-  return hashString;
+function updateQR() {
+  const encodedData = encodeToHex(qrSequencer.sequencerState); // we get a hex string version of state
+  updateHash(encodedData);
+  // const newHash = updateHash(encodedData);
+  qrSequencer.updateQRCode(window.location.hash);
+  updateSequencerState(encodedData);
 }
 
-function updateHash() {
-  let currentHash = createHashString();
-  // Get the current hash from the URL
-  console.log("Current hash:", currentHash); // Example output: "#section1"
+function updateHash(hexString) {
+  let currentHash = hexString;
 
   // Remove the '#' symbol to get just the anchor name
-  const anchorName = currentHash.replace("#", "");
-  console.log("Anchor name:", anchorName); // Example output: "section1"
+  if (currentHash) {
+    let anchorName;
+    if (currentHash.includes("#")) {
+      anchorName = currentHash.replace("#", "");
+    } else {
+      anchorName = currentHash;
+    }
+    console.log("Anchor name:", anchorName); // Example output: "section1"
 
-  // Set a new hash in the URL
-  window.location.hash = currentHash; // This will navigate to #newAnchor on the page
+    // Set a new hash in the URL
+    window.location.hash = currentHash; // This will navigate to #newAnchor on the page
+    return `#${anchorName}`;
+  }
+}
+
+function updateSequencerState(hexString) {
+  const hash = window.location.hash.substring(1);
+  const decodedData = decodeFromHex(hexString);
+  if (hash) {
+    console.log("Loading sequencer state from hash:", hash);
+    qrSequencer.setSequencerState(decodedData);
+    updateGrid();
+  }
+  console.log("qrSequencer new sequencerState", qrSequencer.sequencerState);
 }

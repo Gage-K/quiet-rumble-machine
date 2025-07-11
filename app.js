@@ -2,8 +2,6 @@ import config from "./config/qr-config.js";
 import { encodeToHex, decodeFromHex } from "./util.js";
 console.log(config.baseUrl);
 
-let binaryString = "";
-
 class QRSequencer {
   constructor(containerId, options = {}) {
     this.container = document.getElementById(containerId);
@@ -302,7 +300,6 @@ function startMusic() {
       clap.start(time);
     }
     stepIndex = (stepIndex + 1) % qrSequencer.options.steps;
-    // qrSequencer.
   }, "8n").start(0);
 
   Tone.getTransport().bpm.value = 150;
@@ -324,7 +321,6 @@ function stopMusic() {
 function updateQR() {
   const encodedData = encodeToHex(qrSequencer.sequencerState); // we get a hex string version of state
   updateHash(encodedData);
-  // const newHash = updateHash(encodedData);
   qrSequencer.updateQRCode(window.location.hash);
   updateSequencerState(encodedData);
 }

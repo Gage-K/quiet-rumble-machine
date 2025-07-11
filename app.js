@@ -1,4 +1,5 @@
 import config from "./config/qr-config.js";
+import { encodeToHex, decodeFromHex } from "./util.js";
 console.log(config.baseUrl);
 
 let hashString = "";
@@ -306,7 +307,17 @@ function stopMusic() {
   const colorz = document.querySelectorAll(".invertColors");
   colorz.forEach((node) => node.classList.remove("invertColors"));
   createHashString();
-  updateHash();
+  updateQR();
+}
+
+function updateQR() {
+  const encodedData = encodeToHex(qrSequencer.sequencerState); // we get a hex string version of state
+  updateHash(encodedData);
+  // const newHash = updateHash(encodedData);
+  qrSequencer.updateQRCode(window.location.hash);
+  const decodedData = decodeFromHex(encodedData);
+  console.log(decodedData);
+  // updateSequencerState(encodedData);
 }
 
 function createHashString() {
@@ -323,15 +334,29 @@ function createHashString() {
   return hashString;
 }
 
-function updateHash() {
-  let currentHash = createHashString();
+// separate out concerns
+function updateHash(hexString) {
+  let currentHash = hexString;
   // Get the current hash from the URL
-  console.log("Current hash:", currentHash); // Example output: "#section1"
+  // console.log("Current hash:", currentHash); // Example output: "#section1"
 
   // Remove the '#' symbol to get just the anchor name
-  const anchorName = currentHash.replace("#", "");
-  console.log("Anchor name:", anchorName); // Example output: "section1"
+  if (currentHash) {
+    let anchorName;
+    if (currentHash.includes("#")) {
+      anchorName = currentHash.replace("#", "");
+    } else {
+      anchorName = currentHash;
+    }
+    console.log("Anchor name:", anchorName); // Example output: "section1"
 
-  // Set a new hash in the URL
-  window.location.hash = currentHash; // This will navigate to #newAnchor on the page
+    // Set a new hash in the URL
+    window.location.hash = currentHash; // This will navigate to #newAnchor on the page
+    return `#${anchorName}`;
+  }
+}
+
+function updateSequencerState(hexString) {
+  const decodedData = decodeFromHex(hexString);
+  qrSequencer.setSequencerState(decodedData);
 }

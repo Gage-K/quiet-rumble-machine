@@ -4,6 +4,10 @@ console.log(config.baseUrl);
 
 class App {}
 
+/**
+ * @description
+ * This is a class for managing the state of the sequencer. It accepts an object of configuration options
+ */
 class SequencerState {
   constructor(options) {
     this.options = options;
@@ -29,18 +33,18 @@ class SequencerState {
   }
 
   toggleStep(trackIndex, stepIndex) {
-    if (this.isValidStep(trackIndex, stepIndex)) {
-      this.state[trackIndex][stepIndex] = !this.state[trackIndex][stepIndex];
-      return this.state[trackIndex][stepIndex];
+    if (!this.isValidStep(trackIndex, stepIndex)) {
+      throw new Error("Invalid step!");
     }
-    return false;
+    this.state[trackIndex][stepIndex] = !this.state[trackIndex][stepIndex];
+    return this.state[trackIndex][stepIndex];
   }
 
   getStep(trackIndex, stepIndex) {
-    if (this.isValidStep(trackIndex, stepIndex)) {
-      return this.state[trackIndex][stepIndex];
+    if (!this.isValidStep(trackIndex, stepIndex)) {
+      throw new Error("Invalid step!");
     }
-    return false;
+    return this.state[trackIndex][stepIndex];
   }
 
   /**

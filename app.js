@@ -12,7 +12,114 @@ class App {}
 
 class GridRenderer {}
 
-class AudioEngine {}
+class AudioEngine {
+  constructor() {
+    this.kick = new Tone.Player(
+      "https://tonejs.github.io/audio/drum-samples/Kit8/kick.mp3"
+    ).toDestination();
+    this.snare = new Tone.Player(
+      "https://tonejs.github.io/audio/drum-samples/Kit3/snare.mp3"
+    ).toDestination();
+    this.hihat = new Tone.Player(
+      "https://tonejs.github.io/audio/drum-samples/Techno/hihat.mp3"
+    ).toDestination();
+    this.clap = new Tone.Player(
+      "https://tonejs.github.io/audio/drum-samples/Bongos/hihat.mp3"
+    ).toDestination();
+
+    this.isPlaying = false;
+    this.loop = null;
+    this.bpm = 150;
+  }
+
+  startPlayback() {
+    if (this.loop) {
+      this.loop.dispose();
+    }
+    let stepIndex = 0;
+
+    this.loop = new Tone.Loop((time) => {
+      this.isPlaying = true;
+      // steping colorz
+      const getVisualColumnIndex = (step) => {
+        // If step is past the spacer position, add 1 to skip over it
+        // Assuming spacer is at position 8 (between step 7 and 8)
+        return step >= 8 ? step + 9 : step + 8;
+      };
+
+      // Stepping colorz
+      const prevStepIndex =
+        (stepIndex - 1 + qrSequencer.options.steps) % qrSequencer.options.steps;
+
+      const currentColIndex = getVisualColumnIndex(stepIndex);
+      const lastColIndex = getVisualColumnIndex(prevStepIndex);
+
+      const currentCols = document.querySelectorAll(
+        `[data-column='${currentColIndex}']`
+      );
+      const lastCols = document.querySelectorAll(
+        `[data-column='${lastColIndex}']`
+      );
+      currentCols.forEach((node) => node.classList.add("invertColors"));
+      lastCols.forEach((node) => node.classList.remove("invertColors"));
+      console.log(stepIndex);
+
+      //sequencer stuff
+      if (qrSequencer.sequencerState.getStep(0, stepIndex)) {
+        this.kick.start(time);
+      }
+      if (qrSequencer.sequencerState.getStep(1, stepIndex)) {
+        this.snare.start(time);
+      }
+      if (qrSequencer.sequencerState.getStep(2, stepIndex)) {
+        this.hihat.start(time);
+      }
+      if (qrSequencer.sequencerState.getStep(3, stepIndex)) {
+        this.clap.start(time);
+      }
+      stepIndex = (stepIndex + 1) % qrSequencer.options.steps;
+    }, "8n").start(0);
+
+    Tone.getTransport().start();
+  }
+
+  stopPlayback() {
+    if (this.loop) {
+      this.isPlaying = false;
+      this.loop.dispose();
+      this.loop = null;
+    }
+    Tone.getTransport().stop();
+    // clear the colorz
+    const colors = document.querySelectorAll(".invertColors");
+    colors.forEach((node) => node.classList.remove("invertColors"));
+    updateQR();
+  }
+
+  setBPM(bpm) {
+    this.bpm = bpm;
+    if (this.isPlaying) {
+      Tone.getTransport().bpm.value = bpm;
+    }
+  }
+}
+
+const playButton = document.getElementById("play-button");
+const stopButton = document.getElementById("stop-button");
+
+const audioEngine = new AudioEngine();
+
+playButton.addEventListener("click", () => {
+  audioEngine.startPlayback();
+  playButton.style.display = "none";
+  stopButton.style.display = "block";
+});
+
+stopButton.addEventListener("click", () => {
+  audioEngine.stopPlayback();
+  playButton.style.display = "block";
+  stopButton.style.display = "none";
+});
 
 class URLManager {}
 
@@ -173,14 +280,6 @@ class QRSequencer {
     }
   }
 
-  updateSequenceCursor(currentStep) {
-    const column = currentStep + 8;
-    this.sequencerState.forEach((track, step) => {
-      if (step === currentStep) {
-      }
-    });
-  }
-
   updateQRCode(newUrl) {
     this.options.url = newUrl;
     this.generateQR();
@@ -220,99 +319,6 @@ function updateGrid() {
       }
     }
   }
-}
-
-const kick = new Tone.Player(
-  "https://tonejs.github.io/audio/drum-samples/Kit8/kick.mp3"
-).toDestination();
-const snare = new Tone.Player(
-  "https://tonejs.github.io/audio/drum-samples/Kit3/snare.mp3"
-).toDestination();
-const hihat = new Tone.Player(
-  "https://tonejs.github.io/audio/drum-samples/Techno/hihat.mp3"
-).toDestination();
-const clap = new Tone.Player(
-  "https://tonejs.github.io/audio/drum-samples/Bongos/hihat.mp3"
-).toDestination();
-
-const playButton = document.getElementById("play-button");
-const stopButton = document.getElementById("stop-button");
-
-playButton.addEventListener("click", () => {
-  startMusic();
-  playButton.style.display = "none";
-  stopButton.style.display = "block";
-});
-
-stopButton.addEventListener("click", () => {
-  stopMusic();
-  playButton.style.display = "block";
-  stopButton.style.display = "none";
-});
-
-let loop = null;
-
-function startMusic() {
-  if (loop) {
-    loop.dispose();
-  }
-  let stepIndex = 0;
-
-  loop = new Tone.Loop((time) => {
-    // steping colorz
-    const getVisualColumnIndex = (step) => {
-      // If step is past the spacer position, add 1 to skip over it
-      // Assuming spacer is at position 8 (between step 7 and 8)
-      return step >= 8 ? step + 9 : step + 8;
-    };
-
-    // Stepping colorz
-    const prevStepIndex =
-      (stepIndex - 1 + qrSequencer.options.steps) % qrSequencer.options.steps;
-
-    const currentColIndex = getVisualColumnIndex(stepIndex);
-    const lastColIndex = getVisualColumnIndex(prevStepIndex);
-
-    const currentCols = document.querySelectorAll(
-      `[data-column='${currentColIndex}']`
-    );
-    const lastCols = document.querySelectorAll(
-      `[data-column='${lastColIndex}']`
-    );
-    currentCols.forEach((node) => node.classList.add("invertColors"));
-    lastCols.forEach((node) => node.classList.remove("invertColors"));
-    console.log(stepIndex);
-
-    //sequencer stuff
-    if (qrSequencer.sequencerState.getStep(0, stepIndex)) {
-      kick.start(time);
-    }
-    if (qrSequencer.sequencerState.getStep(1, stepIndex)) {
-      snare.start(time);
-    }
-    if (qrSequencer.sequencerState.getStep(2, stepIndex)) {
-      hihat.start(time);
-    }
-    if (qrSequencer.sequencerState.getStep(3, stepIndex)) {
-      clap.start(time);
-    }
-    stepIndex = (stepIndex + 1) % qrSequencer.options.steps;
-  }, "8n").start(0);
-
-  Tone.getTransport().bpm.value = 150;
-  Tone.getTransport().start();
-}
-
-function stopMusic() {
-  if (loop) {
-    loop.dispose();
-    loop = null;
-  }
-  Tone.getTransport().stop();
-  // clear the colorz
-  const colorz = document.querySelectorAll(".invertColors");
-  colorz.forEach((node) => node.classList.remove("invertColors"));
-  updateQR();
 }
 
 function updateQR() {

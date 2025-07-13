@@ -2,6 +2,71 @@ import config from "./config/qr-config.js";
 import { encodeToHex, decodeFromHex } from "./util.js";
 console.log(config.baseUrl);
 
+class App {}
+
+class SequencerState {
+  constructor(options) {
+    this.options = options;
+    this.state = this.resetState();
+  }
+
+  getState() {
+    return [...this.state.map((track) => [...track])];
+  }
+
+  setState(newState) {
+    if (newState.length !== this.options.numTracks) {
+      throw new Error("Invalid number of tracks!");
+    }
+
+    this.state = newState.map((track) => [...track]);
+  }
+
+  resetState() {
+    return Array.from({ length: this.options.numTracks }, () =>
+      Array(this.options.steps).fill(false)
+    );
+  }
+
+  toggleStep(trackIndex, stepIndex) {
+    if (this.isValidStep(trackIndex, stepIndex)) {
+      this.state[trackIndex][stepIndex] = !this.state[trackIndex][stepIndex];
+      return this.state[trackIndex][stepIndex];
+    }
+    return false;
+  }
+
+  getStep(trackIndex, stepIndex) {
+    if (this.isValidStep(trackIndex, stepIndex)) {
+      return this.state[trackIndex][stepIndex];
+    }
+    return false;
+  }
+
+  /**
+   *
+   * Validation check: returns true if the step is within the bounds of the sequencer
+   *
+   * @param {*} trackIndex
+   * @param {*} stepIndex
+   * @returns
+   */
+  isValidStep(trackIndex, stepIndex) {
+    return (
+      trackIndex >= 0 &&
+      trackIndex < this.options.numTracks &&
+      stepIndex >= 0 &&
+      stepIndex < this.options.steps
+    );
+  }
+}
+
+class GridRenderer {}
+
+class AudioEngine {}
+
+class URLManager {}
+
 class QRSequencer {
   constructor(containerId, options = {}) {
     this.container = document.getElementById(containerId);
@@ -15,9 +80,7 @@ class QRSequencer {
     this.qr = null;
     this.size = 0;
     this.qrNodes = null;
-    this.sequencerState = Array.from({ length: this.options.numTracks }, () =>
-      Array(this.options.steps).fill(false)
-    );
+    this.sequencerState = new SequencerState(this.options);
     this.init();
   }
 
@@ -84,9 +147,8 @@ class QRSequencer {
 
   toggleStep(stepButton, trackIndex, stepIndex) {
     stepButton.classList.toggle("active-step");
-    this.sequencerState[trackIndex][stepIndex] =
-      !this.sequencerState[trackIndex][stepIndex];
-    this.onSequencerChange(this.sequencerState);
+    this.sequencerState.toggleStep(trackIndex, stepIndex);
+    this.onSequencerChange(this.sequencerState.getState());
   }
 
   onSequencerChange(state) {
@@ -162,33 +224,12 @@ class QRSequencer {
     }
   }
 
-  getSequencerState() {
-    return [...this.sequencerState.map((track) => [...track])];
-  }
-
-  setSequencerState(newState) {
-    if (newState.length !== this.options.numTracks) {
-      throw new Error("Invalid number of tracks!");
-    }
-
-    this.sequencerState = newState.map((track) => [...track]);
-    console.log("sequencer state set!")
-    console.log("newState", newState);
-  }
-
-
   updateSequenceCursor(currentStep) {
     const column = currentStep + 8;
     this.sequencerState.forEach((track, step) => {
       if (step === currentStep) {
       }
     });
-  }
-
-  clearSequencer() {
-    this.sequencerState = Array.from({ length: this.options.numTracks }, () =>
-      Array(this.options.steps).fill(false)
-    );
   }
 
   updateQRCode(newUrl) {
@@ -209,11 +250,19 @@ function updateGrid() {
   const stepButtons = qrSequencer.container.querySelectorAll(".step");
   let buttonIndex = 0;
 
-  for (let trackIndex = 0; trackIndex < qrSequencer.options.numTracks; trackIndex++) {
-    for (let stepIndex = 0; stepIndex < qrSequencer.options.steps; stepIndex++) {
+  for (
+    let trackIndex = 0;
+    trackIndex < qrSequencer.options.numTracks;
+    trackIndex++
+  ) {
+    for (
+      let stepIndex = 0;
+      stepIndex < qrSequencer.options.steps;
+      stepIndex++
+    ) {
       if (buttonIndex < stepButtons.length) {
         const button = stepButtons[buttonIndex];
-        if (qrSequencer.sequencerState[trackIndex][stepIndex]) {
+        if (qrSequencer.sequencerState.getStep(trackIndex, stepIndex)) {
           button.classList.add("active-step");
         } else {
           button.classList.remove("active-step");
@@ -223,7 +272,6 @@ function updateGrid() {
     }
   }
 }
-
 
 const kick = new Tone.Player(
   "https://tonejs.github.io/audio/drum-samples/Kit8/kick.mp3"
@@ -287,16 +335,16 @@ function startMusic() {
     console.log(stepIndex);
 
     //sequencer stuff
-    if (qrSequencer.sequencerState[0][stepIndex]) {
+    if (qrSequencer.sequencerState.getStep(0, stepIndex)) {
       kick.start(time);
     }
-    if (qrSequencer.sequencerState[1][stepIndex]) {
+    if (qrSequencer.sequencerState.getStep(1, stepIndex)) {
       snare.start(time);
     }
-    if (qrSequencer.sequencerState[2][stepIndex]) {
+    if (qrSequencer.sequencerState.getStep(2, stepIndex)) {
       hihat.start(time);
     }
-    if (qrSequencer.sequencerState[3][stepIndex]) {
+    if (qrSequencer.sequencerState.getStep(3, stepIndex)) {
       clap.start(time);
     }
     stepIndex = (stepIndex + 1) % qrSequencer.options.steps;
@@ -319,7 +367,7 @@ function stopMusic() {
 }
 
 function updateQR() {
-  const encodedData = encodeToHex(qrSequencer.sequencerState); // we get a hex string version of state
+  const encodedData = encodeToHex(qrSequencer.sequencerState.getState()); // we get a hex string version of state
   updateHash(encodedData);
   qrSequencer.updateQRCode(window.location.hash);
   updateSequencerState(encodedData);
@@ -349,8 +397,13 @@ function updateSequencerState(hexString) {
   const decodedData = decodeFromHex(hexString);
   if (hash) {
     console.log("Loading sequencer state from hash:", hash);
-    qrSequencer.setSequencerState(decodedData);
+    qrSequencer.sequencerState.setState(decodedData);
     updateGrid();
   }
-  console.log("qrSequencer new sequencerState", qrSequencer.sequencerState);
+  console.log(
+    "qrSequencer new sequencerState",
+    qrSequencer.sequencerState.getState()
+  );
 }
+
+const app = new App();

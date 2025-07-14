@@ -1,9 +1,9 @@
 import config from "./config/qr-config.js";
 import URLManager from "./urlManager.js";
-import AudioEngine from "./audioEngine.js";
-import SequencerState from "./state.js";
+import AudioEngine from "./audio.js";
+import SequencerState from "./sequencer.js";
 import QRCode from "./qrCode.js";
-import GridRenderer from "./ui.js";
+import GridRenderer from "./userInterface.js";
 
 /**
  * @description

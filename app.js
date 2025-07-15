@@ -7,7 +7,8 @@ import GridRenderer from "./userInterface.js";
 
 /**
  * @description
- * This is a class for managing the state of the sequencer. It accepts an object of configuration options
+ * This is a class for managing the app and initializing all necessary classes
+ * It accepts an object of configuration options
  */
 class App {
   constructor(options) {
@@ -21,6 +22,11 @@ class App {
     this.init();
   }
 
+  /**
+   * Initializes app with necssary classes
+   * If there's a hash, load the state from the hash, otherwise use the default state
+   * Generates QR code and updates grid UI with this state
+   */
   init() {
     console.log("initializing app");
     this.qrCode = new QRCode({
@@ -56,6 +62,12 @@ class App {
     });
   }
 
+  /**
+   * @description
+   * Handles step toggling event
+   * Updates sequencer state, url, and QR code
+   * Passed to GridRenderer class to handle user edits
+   */
   onStepToggled(trackIndex, stepIndex) {
     this.sequencerState.toggleStep(trackIndex, stepIndex);
     this.urlManager.setStateToHash(this.sequencerState.getState());
@@ -71,6 +83,7 @@ class App {
 
 const app = new App(config);
 
+// TODO: move these to the userInterface class
 const playButton = document.getElementById("play-button");
 const stopButton = document.getElementById("stop-button");
 

@@ -1,11 +1,19 @@
+/**
+ * @description
+ * Manages the state of the sequencer
+ * Accepts configuration options (number of tracks, number of steps)
+ */
 export default class SequencerState {
   constructor({ numTracks, steps }) {
     this.numTracks = numTracks;
     this.steps = steps;
+
+    // initialize the state of the sequencer
     this.state = this.resetState();
   }
 
   getState() {
+    // creating a deep copy of the array prevents mutation of the original state
     return [...this.state.map((track) => [...track])];
   }
 
@@ -23,6 +31,11 @@ export default class SequencerState {
     );
   }
 
+  /**
+   * @description
+   * Toggles the state of a step
+   * Returns the new state of the step
+   */
   toggleStep(trackIndex, stepIndex) {
     if (!this.isValidStep(trackIndex, stepIndex)) {
       throw new Error("Invalid step!");

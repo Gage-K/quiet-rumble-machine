@@ -1,3 +1,8 @@
+/**
+ * @description
+ * Handles rendering and updated the UI, including visualizing the QR code and sequencer
+ * Accepts configuration options (qrNodes, size, tracks, steps, sequencerState, onStepToggled)
+ */
 export default class GridRenderer {
   constructor({ qrNodes, size, tracks, steps, sequencerState, onStepToggled }) {
     this.container = document.getElementById("container");
@@ -6,11 +11,24 @@ export default class GridRenderer {
     this.tracks = tracks;
     this.steps = steps;
     this.sequencerState = sequencerState;
+
+    // onStepToggled is passed in from the App class to handle user edits
+    // function is bound to the App class to ensure that the correct context is used
+    // onStepToggled produces several side effects:
+    // 1. update the sequencer state
+    // 2. update the url
+    // 3. update the QR code
+    // 4. update the grid UI
     this.onStepToggled = onStepToggled;
 
     this.renderGrid();
   }
 
+  /**
+   * @description
+   * Renders the grid UI
+   * Clears the container and renders the grid based on the current state
+   */
   renderGrid() {
     console.log("rendering grid");
     if (!this.container) {
@@ -21,6 +39,7 @@ export default class GridRenderer {
 
     let element;
 
+    // renders grid based on if its location in the code is reserved for the sequencer or not
     for (let row = 0; row < this.size; row++) {
       for (let col = 0; col < this.size; col++) {
         if (this.isSequencerBorder(row, col)) {
@@ -90,6 +109,7 @@ export default class GridRenderer {
     return stepButton;
   }
 
+  // QR node refers to the individual "pixel" of the QR code
   getQRNode(row, col) {
     const qrNode = document.createElement("div");
     qrNode.classList.add(
@@ -124,6 +144,7 @@ export default class GridRenderer {
     };
   }
 
+  // toggles class for visual feedback of active step
   toggleStepUI(stepButton) {
     stepButton.classList.toggle("active-step");
   }

@@ -1,4 +1,10 @@
+/**
+ * @description
+ * Handles the Tone.js context, including playback and instruments
+ * Accepts configuration options (number of tracks, number of steps, and sequencerState)
+ */
 export default class AudioEngine {
+  // TODO: potentiall add additional instruments to audio engine based on tracks
   constructor({ tracks, steps, sequencerState }) {
     this.kick = new Tone.Player(
       "https://tonejs.github.io/audio/drum-samples/Kit8/kick.mp3"
@@ -15,12 +21,19 @@ export default class AudioEngine {
 
     this.isPlaying = false;
     this.loop = null;
-    this.bpm = 175;
+    this.bpm = 120;
     this.tracks = tracks;
     this.steps = steps;
     this.sequencerState = sequencerState;
   }
 
+  /**
+   * @description
+   * Starts the playback of the sequencer
+   * Disposes of loop if it exists (prevents multiple loops from playing)
+   * Loops through the sequencer state and plays the appropriate instruments
+   * Updates the color of the grid based on the current step
+   */
   startPlayback() {
     if (this.loop) {
       this.loop.dispose();
@@ -48,11 +61,13 @@ export default class AudioEngine {
       const lastCols = document.querySelectorAll(
         `[data-column='${lastColIndex}']`
       );
+
+      // TODO: move this to the userInterface class (?)
       currentCols.forEach((node) => node.classList.add("invertColors"));
       lastCols.forEach((node) => node.classList.remove("invertColors"));
       console.log(stepIndex);
 
-      //sequencer stuff
+      // Sequencer playback
       if (this.sequencerState.getStep(0, stepIndex)) {
         this.kick.start(time);
       }
@@ -65,12 +80,19 @@ export default class AudioEngine {
       if (this.sequencerState.getStep(3, stepIndex)) {
         this.clap.start(time);
       }
+
+      // mod moves us forward one step on each clock tick
       stepIndex = (stepIndex + 1) % this.steps;
     }, "16n").start(0);
 
     Tone.getTransport().start();
   }
 
+  /**
+   * @description
+   * Stops the playback of the sequencer by disposing of transport
+   * Clears the color of the grid based on the current step
+   */
   stopPlayback() {
     if (this.loop) {
       this.isPlaying = false;
@@ -83,6 +105,7 @@ export default class AudioEngine {
     colors.forEach((node) => node.classList.remove("invertColors"));
   }
 
+  // note: bpm change does not halt audio playback, but it does change the tempo of the sequencer
   set bpm(value) {
     this._bpm = value;
     Tone.getTransport().bpm.value = this._bpm;

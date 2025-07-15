@@ -1,3 +1,8 @@
+/**
+ * @description
+ * Handles the encoding and decoding of the state of the sequencer
+ * Accepts data (state of the sequencer) and returns a hex string
+ */
 function encodeToHex(data) {
   let hexString = "";
 
@@ -13,6 +18,12 @@ function encodeToHex(data) {
   return hexString;
 }
 
+/**
+ * @description
+ * Helper function to convert the data (state of the sequencer) to a binary string
+ * Accepts data (state of the sequencer) and returns a binary string
+ * @returns binary string
+ */
 function convertDataToBinary(data) {
   let binaryString = "";
   for (let i = 0; i < data.length; i++) {
@@ -23,6 +34,12 @@ function convertDataToBinary(data) {
   return binaryString;
 }
 
+/**
+ * @description
+ * Helper function to convert a hex string to a binary string
+ * Accepts a hex string and returns a binary string
+ * @returns binary string
+ */
 function convertHexToBinary(hexString) {
   let binaryString = "";
   for (let i = 0; i < hexString.length; i++) {
@@ -30,17 +47,18 @@ function convertHexToBinary(hexString) {
     const binaryChunk = parseInt(hexChar, 16).toString(2).padStart(4, "0");
     binaryString += binaryChunk;
   }
-  console.log("binaryString convertHexToBinary", binaryString);
   return binaryString;
 }
 
+/**
+ * @description
+ * Decodes a hex string into a state of the sequencer
+ * @returns state of the sequencer based on encoded data
+ */
 function decodeFromHex(hexString) {
   const binaryString = convertHexToBinary(hexString);
   const numSteps = 16;
   const numTracks = Math.floor(binaryString.length / numSteps);
-  console.log("binaryString decode", binaryString);
-  console.log("binaryString.length", binaryString.length);
-  console.log("numTracks", numTracks);
   const outputArray = [];
 
   for (let i = 0; i < numTracks; i++) {
@@ -51,12 +69,7 @@ function decodeFromHex(hexString) {
     }
     outputArray.push(trackArray);
   }
-  console.log("outputArray", outputArray);
   return outputArray;
 }
-
-// const testData = new Array(4).fill(
-//   new Array(16).fill((index) => (index % 2 === 0 ? true : false))
-// );
 
 export { encodeToHex, decodeFromHex };

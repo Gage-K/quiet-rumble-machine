@@ -21,7 +21,7 @@ export default class AudioEngine {
 
     this.isPlaying = false;
     this.loop = null;
-    this.bpm = 120;
+    this.bpm = 150;
     this.tracks = tracks;
     this.steps = steps;
     this.sequencerState = sequencerState;

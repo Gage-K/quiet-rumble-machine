@@ -149,20 +149,21 @@ table {
 }
 
 #container {
+  width: 100vw;
+  max-width: 500px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+
   display: grid;
   grid-template-columns: repeat(37, 1fr);
   /* 29 for now */
   grid-template-rows: repeat(37, 1fr);
   /* 29 for now */
-  width: 500px;
-  height: 500px;
   /* background-color: #000; */
 }
-
-@media only screen and (max-width: 500px) {
+@media (max-width: 500px) {
   #container {
-    width: 300px;
-    height: 300px;
+    max-width: 300px;
   }
 }
 

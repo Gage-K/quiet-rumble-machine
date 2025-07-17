@@ -108,6 +108,7 @@ section {
 }
 
 body {
+  font-family: "Tiny5", sans-serif;
   line-height: 1;
 }
 
@@ -134,26 +135,42 @@ table {
   border-spacing: 0;
 }
 
+.page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 1000px;
+  margin: auto;
+  padding: 0 2rem;
+}
+
+#main-wrapper {
+}
+
 #container {
   display: grid;
-  grid-template-columns: repeat(33, 1fr);
+  grid-template-columns: repeat(37, 1fr);
   /* 29 for now */
-  grid-template-rows: repeat(33, 1fr);
+  grid-template-rows: repeat(37, 1fr);
   /* 29 for now */
   width: 500px;
   height: 500px;
   /* background-color: #000; */
 }
 
-.page-container {
-  /* padding: 0 30vw; */
+@media only screen and (max-width: 500px) {
+  #container {
+    width: 300px;
+    height: 300px;
+  }
 }
 
 h1 {
-  font-size: 2rem;
+  font-size: 3rem;
+  margin: 2rem 0;
   font-weight: bold;
-  font-family: monospace;
-  margin: auto;
+  font-family: "Tiny5", sans-serif;
 }
 
 button {
@@ -162,6 +179,20 @@ button {
   box-shadow: none;
   border-radius: none;
   border: none;
+}
+
+.buttonz {
+  font-family: "Tiny5", sans-serif;
+  background-color: #5901ce;
+  margin-top: 1rem;
+  color: white;
+  font-size: 1.5rem;
+  padding: 0.5rem 1rem 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  &:hover {
+    background-color: #4500a8;
+  }
 }
 
 .qr-brick-on {

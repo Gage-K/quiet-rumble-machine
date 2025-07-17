@@ -157,17 +157,19 @@ table {
   height: 500px;
 
   display: grid;
-  grid-template-columns: repeat(37, 1fr);
-  grid-template-rows: repeat(37, 1fr);
+  grid-template-columns: repeat(37, 13px);
+  grid-template-rows: repeat(37, 13px);
 
   /* Ensure it maintains square proportions */
-  margin: 0 auto;
 }
 
 @media (max-width: 500px) {
   #container {
     max-width: 300px;
     height: 300px; /* Match the width */
+
+    grid-template-columns: repeat(37, 7px);
+    grid-template-rows: repeat(37, 7px);
   }
 }
 

@@ -4,6 +4,7 @@ import AudioEngine from "./audio.js";
 import SequencerState from "./sequencer.js";
 import QRCode from "./qrCode.js";
 import GridRenderer from "./userInterface.js";
+import Tone from "tone";
 
 /**
  * @description
@@ -89,6 +90,7 @@ const playButton = document.getElementById("play-button");
 const stopButton = document.getElementById("stop-button");
 
 playButton.addEventListener("click", () => {
+  Tone.start();
   app.audioEngine.startPlayback();
   playButton.style.display = "none";
   stopButton.style.display = "block";

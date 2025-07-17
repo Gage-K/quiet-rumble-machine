@@ -4,7 +4,6 @@ import AudioEngine from "./audio.js";
 import SequencerState from "./sequencer.js";
 import QRCode from "./qrCode.js";
 import GridRenderer from "./userInterface.js";
-import Tone from "tone";
 
 /**
  * @description

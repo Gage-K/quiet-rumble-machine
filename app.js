@@ -59,6 +59,7 @@ class App {
       tracks: this.options.tracks,
       steps: this.options.steps,
       sequencerState: this.sequencerState,
+      qrData: this.qrCode.getQRNodes(),
     });
   }
 
@@ -74,9 +75,6 @@ class App {
     console.log("state updated", this.sequencerState.getState());
 
     // Update the QR code's URL to the new hash or state
-    console.log(this.urlManager.getBaseUrl());
-    console.log(window.location.hash);
-    console.log(this.urlManager.getBaseUrl() + window.location.hash);
     this.qrCode.url = this.urlManager.getBaseUrl() + window.location.hash; // or use the correct value from urlManager
     this.qrCode.generateQR();
     this.grid.qrNodes = this.qrCode.getQRNodes();
@@ -94,6 +92,7 @@ playButton.addEventListener("click", () => {
   app.audioEngine.startPlayback();
   playButton.style.display = "none";
   stopButton.style.display = "block";
+  stopButton.classList.add("invertColors");
 });
 
 stopButton.addEventListener("click", () => {

@@ -1,25 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap"
+      rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/15.2.7/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.2/dist/qrcode.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" type="module" defer></script>
+    <!-- <script src="app.js" defer></script> -->
+    <title>Quiet Rumble Machine</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/15.2.7/Tone.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.2/dist/qrcode.min.js"></script>
-  <link rel="stylesheet" href="style.css" />
-  <script src="app.js" type="module" defer></script>
-  <!-- <script src="app.js" defer></script> -->
-  <title>Quiet Rumble Machine</title>
-</head>
-
-<body>
-  <div class="page-container">
-    <h1>Quiet Rumble Machine!</h1>
-    <div id="placeHolder"></div>
-    <div id="container"></div>
-    <button id="play-button">play!</button>
-    <button id="stop-button">stop!</button>
-  </div>
-</body>
-
+  <body>
+    <div class="page-container">
+      <div id="main-wrapper">
+        <h1>! QUIET RUMBLE MACHINE !</h1>
+        <div id="container"></div>
+        <button class="buttonz" id="play-button">! PLAY !</button>
+        <button class="buttonz invertColors" id="stop-button">! STOP !</button>
+      </div>
+    </div>
+  </body>
 </html>

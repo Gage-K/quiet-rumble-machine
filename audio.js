@@ -46,7 +46,7 @@ export default class AudioEngine {
       const getVisualColumnIndex = (step) => {
         // If step is past the spacer position, add 1 to skip over it
         // Assuming spacer is at position 8 (between step 7 and 8)
-        return step >= 8 ? step + 9 : step + 8;
+        return step >= 8 ? step + 11 : step + 10;
       };
 
       // Stepping colorz
@@ -65,7 +65,6 @@ export default class AudioEngine {
       // TODO: move this to the userInterface class (?)
       currentCols.forEach((node) => node.classList.add("invertColors"));
       lastCols.forEach((node) => node.classList.remove("invertColors"));
-      console.log(stepIndex);
 
       // Sequencer playback
       if (this.sequencerState.getStep(0, stepIndex)) {

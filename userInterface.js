@@ -100,7 +100,6 @@ export default class GridRenderer {
     // if col is greater than 16, subtract 9 for spacer
     const spacerCol = Math.floor(this.size / 2); // column 16
     const stepIndex = col >= spacerCol ? col - 11 : col - 10;
-    console.log("stepIndex", stepIndex);
     // console.log("col", col);
     // console.log("row", row);
     const trackIndex = row - 8;

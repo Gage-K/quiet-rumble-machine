@@ -74,7 +74,10 @@ class App {
     console.log("state updated", this.sequencerState.getState());
 
     // Update the QR code's URL to the new hash or state
-    this.qrCode.url = window.location.hash; // or use the correct value from urlManager
+    console.log(this.urlManager.getBaseUrl());
+    console.log(window.location.hash);
+    console.log(this.urlManager.getBaseUrl() + window.location.hash);
+    this.qrCode.url = this.urlManager.getBaseUrl() + window.location.hash; // or use the correct value from urlManager
     this.qrCode.generateQR();
     this.grid.qrNodes = this.qrCode.getQRNodes();
     this.grid.renderGrid();

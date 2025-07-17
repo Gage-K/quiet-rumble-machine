@@ -28,6 +28,7 @@ export default class QRCode {
    * Generates the QR code based on current config options and current url
    */
   generateQR() {
+    console.log("qrcode has this url", this.url);
     this.qr = qrcode(this.typeNumber, this.errorCorrectionLevel);
     this.qr.addData(this.url);
     this.qr.make();

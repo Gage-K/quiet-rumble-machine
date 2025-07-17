@@ -134,11 +134,18 @@ table {
   border-spacing: 0;
 }
 
+@media screen and (width >= 900px) {
+  #container {
+    width: 500px;
+    height: 500px;
+  }
+}
+
 #container {
   display: grid;
-  grid-template-columns: repeat(33, 1fr);
+  grid-template-columns: repeat(37, 1fr);
   /* 29 for now */
-  grid-template-rows: repeat(33, 1fr);
+  grid-template-rows: repeat(37, 1fr);
   /* 29 for now */
   width: 500px;
   height: 500px;

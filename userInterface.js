@@ -3,6 +3,8 @@
  * Handles rendering and updated the UI, including visualizing the QR code and sequencer
  * Accepts configuration options (qrNodes, size, tracks, steps, sequencerState, onStepToggled)
  */
+
+const offset = 9; // 7 for the position marker
 export default class GridRenderer {
   constructor({ qrNodes, size, tracks, steps, sequencerState, onStepToggled }) {
     this.container = document.getElementById("container");
@@ -88,14 +90,21 @@ export default class GridRenderer {
   getStepButton(row, col) {
     const stepButton = document.createElement("button");
     stepButton.classList.add("current-step");
-    stepButton.setAttribute("aria-label", `Step ${col - 7} Track ${row - 7}`);
+    stepButton.setAttribute(
+      "aria-label",
+      `Step ${col - offset} Track ${row - offset}`
+    );
     stepButton.classList.add("step");
 
     // handle the spacer
     // if col is greater than 16, subtract 9 for spacer
     const spacerCol = Math.floor(this.size / 2); // column 16
-    const stepIndex = col >= spacerCol ? col - 9 : col - 8;
+    const stepIndex = col >= spacerCol ? col - 11 : col - 10;
+    console.log("stepIndex", stepIndex);
+    // console.log("col", col);
+    // console.log("row", row);
     const trackIndex = row - 8;
+    // console.log("trackIndex", trackIndex);
     stepButton.addEventListener("click", () => {
       this.toggleStepUI(stepButton);
       // some extra validation to ensure that function is defined
@@ -139,8 +148,8 @@ export default class GridRenderer {
     return {
       startRow: 7,
       endRow: 12,
-      startCol: 7,
-      endCol: 25,
+      startCol: offset,
+      endCol: offset + 18,
     };
   }
 

@@ -3,9 +3,10 @@
  * Handles the Tone.js context, including playback and instruments
  * Accepts configuration options (number of tracks, number of steps, and sequencerState)
  */
+
 export default class AudioEngine {
   // TODO: potentiall add additional instruments to audio engine based on tracks
-  constructor({ tracks, steps, sequencerState }) {
+  constructor({ tracks, steps, sequencerState, currentBpm }) {
     this.kick = new Tone.Player(
       "https://tonejs.github.io/audio/drum-samples/Kit8/kick.mp3"
     ).toDestination();
@@ -21,7 +22,7 @@ export default class AudioEngine {
 
     this.isPlaying = false;
     this.loop = null;
-    this.bpm = 150;
+    this.bpm = currentBpm;
     this.tracks = tracks;
     this.steps = steps;
     this.sequencerState = sequencerState;

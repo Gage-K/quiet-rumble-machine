@@ -54,12 +54,15 @@ class App {
       steps: this.options.steps,
       sequencerState: this.sequencerState,
       onStepToggled: this.onStepToggled.bind(this), // needed so that the function has access to the context of the App class
+      currentBpm: 120,
+      onBpmChanged: this.onBpmChanged.bind(this), // callback to handle BPM changes
     });
     this.audioEngine = new AudioEngine({
       tracks: this.options.tracks,
       steps: this.options.steps,
       sequencerState: this.sequencerState,
       qrData: this.qrCode.getQRNodes(),
+      currentBpm: this.grid.currentBpm,
     });
   }
 
@@ -79,6 +82,19 @@ class App {
     this.qrCode.generateQR();
     this.grid.qrNodes = this.qrCode.getQRNodes();
     this.grid.renderGrid();
+    console.log("bpm", this.grid.currentBpm);
+  }
+
+  /**
+   * @description
+   * Handles BPM changes from the slider
+   * Updates the audio engine BPM
+   */
+  onBpmChanged(newBpm) {
+    if (this.audioEngine) {
+      this.audioEngine.bpm = newBpm;
+      console.log("Audio engine BPM updated to:", newBpm);
+    }
   }
 }
 

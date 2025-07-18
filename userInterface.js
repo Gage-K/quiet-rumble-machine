@@ -6,7 +6,7 @@
 
 const offset = 9; // 7 for the position marker
 export default class GridRenderer {
-  constructor({ qrNodes, size, tracks, steps, sequencerState, onStepToggled }) {
+  constructor({ qrNodes, size, tracks, steps, sequencerState, onStepToggled, currentBpm, onBpmChanged }) {
     this.container = document.getElementById("container");
     this.qrNodes = qrNodes;
     this.size = size;
@@ -23,6 +23,11 @@ export default class GridRenderer {
     // 4. update the grid UI
     this.onStepToggled = onStepToggled;
 
+    // on BpmChanged is passed in from the App class to handle BPM changes
+    this.onBpmChanged = onBpmChanged;
+
+    // store the current BPM value to persist across QR refreshes
+    this.currentBpm = currentBpm;
     this.renderGrid();
   }
 
@@ -44,7 +49,9 @@ export default class GridRenderer {
     // renders grid based on if its location in the code is reserved for the sequencer or not
     for (let row = 0; row < this.size; row++) {
       for (let col = 0; col < this.size; col++) {
-        if (this.isSequencerBorder(row, col)) {
+        if (this.isBpmSlider(row, col)) {
+          element = this.getBpmSliderElement(); // NEW: bpm slider
+        } else if (this.isSequencerBorder(row, col)) {
           element = this.getBorderElement();
         } else if (this.isSequencerSpacer(row, col)) {
           element = this.getSpacerElement();
@@ -84,6 +91,11 @@ export default class GridRenderer {
 
   isInSequencerArea(row, col) {
     const { startRow, endRow, startCol, endCol } = this.getSequencerBounds();
+    return col >= startCol && col <= endCol && row >= startRow && row <= endRow;
+  }
+
+  isInBpmSliderArea(row, col) {
+    const { startRow, endRow, startCol, endCol } = this.getBpmSliderPosition();
     return col >= startCol && col <= endCol && row >= startRow && row <= endRow;
   }
 
@@ -134,6 +146,35 @@ export default class GridRenderer {
     return borderDiv;
   }
 
+  getBpmSliderElement() {
+    // Create a container for the vertical slider
+    const sliderContainer = document.createElement("div");
+    sliderContainer.classList.add("bpm-slider-container");
+
+    // Create the actual range input
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = "80";
+    slider.max = "200";
+    slider.value = this.currentBpm.toString(); // Use stored BPM value
+    slider.classList.add("bpm-slider-input");
+    slider.setAttribute("aria-label", "BPM Slider");
+
+    slider.addEventListener("input", (e) => {
+      const bpm = e.target.value;
+      this.currentBpm = parseInt(bpm); // Store the new BPM value
+      console.log("BPM changed to:", bpm);
+
+      // callback to update the audio engine BPM
+      if (this.onBpmChanged) {
+        this.onBpmChanged(this.currentBpm);
+      }
+    });
+
+    sliderContainer.appendChild(slider);
+    return sliderContainer;
+  }
+
   getSpacerElement() {
     const spacer = document.createElement("span");
     spacer.classList.add("spacer");
@@ -156,4 +197,40 @@ export default class GridRenderer {
   toggleStepUI(stepButton) {
     stepButton.classList.toggle("active-step");
   }
+
+  // NEW: bpm slider
+  getBpmSliderPosition() {
+    return {
+      startRow: 7,
+      endRow: 15,
+      startCol: 7,
+      endCol: 7,
+    };
+  }
+
+  renderBpmSlider() {
+    for (let row = 0; row < this.size; row++) {
+      for (let col = 0; col < this.size; col++) {
+        if (this.isBpmSlider(row, col)) {
+          element = this.getBpmSliderElement();
+        } else {
+          element = this.getQRNode(row, col);
+        }
+        element.setAttribute("data-bpm-slider", col);
+        this.container.appendChild(element);
+      }
+    }
+  }
+
+  isBpmSlider(row, col) {
+    const { startRow, endRow, startCol, endCol } = this.getBpmSliderPosition();
+    return (
+      (col === startCol ||
+        col === endCol ||
+        row === startRow ||
+        row === endRow) &&
+      this.isInBpmSliderArea(row, col)
+    );
+  }
+
 }

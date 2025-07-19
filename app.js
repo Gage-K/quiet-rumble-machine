@@ -98,11 +98,21 @@ class App {
   }
 }
 
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log('Text copied to clipboard successfully!');
+  } catch (err) {
+    console.error('Failed to copy text: ', err);
+  }
+}
+
 const app = new App(config);
 
 // TODO: move these to the userInterface class
 const playButton = document.getElementById("play-button");
 const stopButton = document.getElementById("stop-button");
+const shareButton = document.getElementById("share-button");
 
 playButton.addEventListener("click", () => {
   Tone.start();
@@ -116,4 +126,16 @@ stopButton.addEventListener("click", () => {
   app.audioEngine.stopPlayback();
   playButton.style.display = "block";
   stopButton.style.display = "none";
+});
+
+shareButton.addEventListener("click", () => {
+  // app.urlManager.shareState();
+  // get the url from the urlManager
+  const url = app.urlManager.getBaseUrl() + window.location.hash;
+  // stop sequencer
+  app.audioEngine.stopPlayback();
+  playButton.style.display = "block";
+  stopButton.style.display = "none";
+  copyToClipboard(url);
+  window.confirm("link copied to clipboard!");
 });

@@ -7,18 +7,12 @@
 export default class AudioEngine {
   // TODO: potentiall add additional instruments to audio engine based on tracks
   constructor({ tracks, steps, sequencerState, currentBpm }) {
-    this.kick = new Tone.Player(
-      "https://tonejs.github.io/audio/drum-samples/Kit8/kick.mp3"
-    ).toDestination();
-    this.snare = new Tone.Player(
-      "https://tonejs.github.io/audio/drum-samples/Kit3/snare.mp3"
-    ).toDestination();
-    this.hihat = new Tone.Player(
-      "https://tonejs.github.io/audio/drum-samples/Techno/hihat.mp3"
-    ).toDestination();
-    this.clap = new Tone.Player(
-      "https://tonejs.github.io/audio/drum-samples/Bongos/hihat.mp3"
-    ).toDestination();
+    this.track = new Tone.Players({
+      "kick": "https://tonejs.github.io/audio/drum-samples/Kit8/kick.mp3",
+      "snare": "https://tonejs.github.io/audio/drum-samples/Kit3/snare.mp3",
+      "hihat": "https://tonejs.github.io/audio/drum-samples/Techno/hihat.mp3",
+      "clap": "https://tonejs.github.io/audio/drum-samples/breakbeat8/tom3.mp3"
+    }).toDestination();
 
     this.isPlaying = false;
     this.loop = null;
@@ -26,6 +20,7 @@ export default class AudioEngine {
     this.tracks = tracks;
     this.steps = steps;
     this.sequencerState = sequencerState;
+    this.toneFFT = null;
   }
 
   /**
@@ -69,20 +64,25 @@ export default class AudioEngine {
 
       // Sequencer playback
       if (this.sequencerState.getStep(0, stepIndex)) {
-        this.kick.start(time);
+        this.track.player("kick").start(time);
       }
       if (this.sequencerState.getStep(1, stepIndex)) {
-        this.snare.start(time);
+        this.track.player("snare").start(time);
       }
       if (this.sequencerState.getStep(2, stepIndex)) {
-        this.hihat.start(time);
+        this.track.player("hihat").start(time);
       }
       if (this.sequencerState.getStep(3, stepIndex)) {
-        this.clap.start(time);
+        this.track.player("clap").start(time);
       }
 
       // mod moves us forward one step on each clock tick
       stepIndex = (stepIndex + 1) % this.steps;
+
+      // TODO: fft, not done yet
+      this.toneFFT = new Tone.FFT();
+      this.track.connect(this.toneFFT);
+
     }, "16n").start(0);
 
     Tone.getTransport().start();
@@ -115,3 +115,4 @@ export default class AudioEngine {
     return this._bpm;
   }
 }
+

@@ -155,7 +155,7 @@ export default class GridRenderer {
     const slider = document.createElement("input");
     slider.type = "range";
     slider.min = "80";
-    slider.max = "200";
+    slider.max = "170";
     slider.value = this.currentBpm.toString(); // Use stored BPM value
     slider.classList.add("bpm-slider-input");
     slider.setAttribute("aria-label", "BPM Slider");

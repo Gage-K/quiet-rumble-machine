@@ -162,17 +162,6 @@ table {
   position: relative;
 }
 
-@media (max-width: 500px) {
-  #container {
-    max-width: 300px;
-    height: 300px;
-    /* Match the width */
-
-    grid-template-columns: repeat(37, 7px);
-    grid-template-rows: repeat(37, 7px);
-  }
-}
-
 h1 {
   font-size: 3rem;
   margin: 2rem 0;
@@ -187,10 +176,18 @@ button {
   box-shadow: none;
   border-radius: none;
   border: none;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    filter: invert(12%);
+  }
 }
 
 .buttonz {
   font-family: "Tiny5", sans-serif;
+  width: 118px;
+  height: 40px;
+  margin-right: 12px;
   background-color: #5901ce;
   margin-top: 1rem;
   color: white;
@@ -200,7 +197,7 @@ button {
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #4500a8;
+    background-color: #4400a4;
   }
 }
 
@@ -213,7 +210,8 @@ button {
 }
 
 .sequencer-border {
-  background-color: #010ece;
+  /* background-color: #010ece; */
+  background-color: #d4d3f4;
 }
 
 .bpm-slider-container {
@@ -232,7 +230,7 @@ button {
   height: 100%;
   -webkit-appearance: none;
   appearance: none;
-  background: yellowgreen;
+  background: #d4d3f4;
   cursor: pointer;
 }
 
@@ -242,7 +240,7 @@ button {
   width: 13px;
   /* border-style: solid; */
   height: 11%;
-  background: #010ece;
+  background: yellowgreen;
   cursor: pointer;
 }
 
@@ -252,7 +250,7 @@ button {
 }
 
 .spacer {
-  background-color: #010ece;
+  background-color: #d4d3f4;
 }
 
 .sequence-cursor {
@@ -264,10 +262,36 @@ button {
   filter: invert(90%);
 }
 
+#button-container {
+  display: flex;
+  margin: auto;
+  width: 100%;
+}
+
 #play-button {
   display: block;
 }
 
 #stop-button {
   display: none;
+  filter: invert(90%);
+}
+
+@media (max-width: 500px) {
+  #container {
+    max-width: 300px;
+    height: 300px;
+    /* Match the width */
+
+    grid-template-columns: repeat(37, 8px);
+    grid-template-rows: repeat(37, 8px);
+  }
+
+  .bpm-slider-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 8px;
+    /* border-style: solid; */
+    height: 11%;
+  }
 }

@@ -35,8 +35,15 @@ export default class QRCode {
     this.qrNodes = this.getQRNodes();
   }
 
-  getQRData() {
-    return this.getQRNodes();
+  /**
+   * @description
+   * Points the QR code at a new url and regenerates it.
+   * Returns the fresh nodes so callers don't reach into fields.
+   */
+  update(url) {
+    this.url = url;
+    this.generateQR();
+    return this.qrNodes;
   }
 
   /**

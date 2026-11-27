@@ -4,11 +4,14 @@ import AudioEngine from "./audio.js";
 import SequencerState from "./sequencer.js";
 import QRCode from "./qrCode.js";
 import GridRenderer from "./userInterface.js";
+import GridGeometry from "./gridGeometry.js";
+import StateCodec from "./stateCodec.js";
 
 /**
  * @description
- * This is a class for managing the app and initializing all necessary classes
- * It accepts an object of configuration options
+ * Composition root. Constructs the modules, injects their dependencies, and
+ * wires the edit, BPM, and playback flows. Holds no geometry or URL magic of
+ * its own.
  */
 class App {
   constructor(options) {
@@ -22,78 +25,73 @@ class App {
     this.init();
   }
 
-  /**
-   * Initializes app with necssary classes
-   * If there's a hash, load the state from the hash, otherwise use the default state
-   * Generates QR code and updates grid UI with this state
-   */
   init() {
-    console.log("initializing app");
     this.qrCode = new QRCode({
       url: this.options.baseUrl,
       typeNumber: this.options.typeNumber,
       errorCorrectionLevel: this.options.errorCorrection,
     });
-    this.urlManager = new URLManager({ url: this.options.baseUrl });
+
+    const codec = new StateCodec({
+      tracks: this.options.tracks,
+      steps: this.options.steps,
+    });
+    this.urlManager = new URLManager({ url: this.options.baseUrl, codec });
+
+    const geometry = new GridGeometry({
+      qrSize: this.qrCode.getQRSize(),
+      tracks: this.options.tracks,
+      steps: this.options.steps,
+    });
 
     this.sequencerState = new SequencerState({
       numTracks: this.options.tracks,
       steps: this.options.steps,
     });
-    // if there's a hash, load the state from the hash, otherwise use the default state
-    if (window.location.hash.length > 2) {
-      const loadedState = this.urlManager.getStateFromHash();
-      this.sequencerState.setState(loadedState);
+    // load state from the hash if present, otherwise use the default
+    if (this.urlManager.hasState()) {
+      this.sequencerState.setState(this.urlManager.getStateFromHash());
     } else {
       this.sequencerState.setState(this.options.defaultState);
     }
+
     this.grid = new GridRenderer({
+      geometry,
       qrNodes: this.qrCode.getQRNodes(),
-      size: this.qrCode.getQRSize(),
-      tracks: this.options.tracks,
-      steps: this.options.steps,
       sequencerState: this.sequencerState,
-      onStepToggled: this.onStepToggled.bind(this), // needed so that the function has access to the context of the App class
+      onStepToggled: this.onStepToggled.bind(this),
       currentBpm: 120,
-      onBpmChanged: this.onBpmChanged.bind(this), // callback to handle BPM changes
+      onBpmChanged: this.onBpmChanged.bind(this),
     });
+
     this.audioEngine = new AudioEngine({
-      tracks: this.options.tracks,
       steps: this.options.steps,
       sequencerState: this.sequencerState,
-      qrData: this.qrCode.getQRNodes(),
       currentBpm: this.grid.currentBpm,
+      onStep: (step) => this.grid.setPlayhead(step),
     });
   }
 
   /**
    * @description
-   * Handles step toggling event
-   * Updates sequencer state, url, and QR code
-   * Passed to GridRenderer class to handle user edits
+   * Applies a user edit: toggle the step, persist to the URL, regenerate the
+   * QR from the new URL, and re-render the grid. Each collaborator owns its own
+   * mutation, so nothing reaches across a seam.
    */
   onStepToggled(trackIndex, stepIndex) {
     this.sequencerState.toggleStep(trackIndex, stepIndex);
-    this.urlManager.setStateToHash(this.sequencerState.getState());
-    console.log("state updated", this.sequencerState.getState());
-
-    // Update the QR code's URL to the new hash or state
-    this.qrCode.url = this.urlManager.getBaseUrl() + window.location.hash; // or use the correct value from urlManager
-    this.qrCode.generateQR();
-    this.grid.qrNodes = this.qrCode.getQRNodes();
-    this.grid.renderGrid();
-    console.log("bpm", this.grid.currentBpm);
+    this.urlManager.save(this.sequencerState.getState());
+    const qrNodes = this.qrCode.update(this.urlManager.getCurrentUrl());
+    this.grid.render(qrNodes);
   }
 
   /**
    * @description
-   * Handles BPM changes from the slider
-   * Updates the audio engine BPM
+   * Handles BPM changes from the slider by updating the audio engine tempo.
    */
   onBpmChanged(newBpm) {
     if (this.audioEngine) {
       this.audioEngine.bpm = newBpm;
-      console.log("Audio engine BPM updated to:", newBpm);
     }
   }
 }

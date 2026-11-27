@@ -7,7 +7,8 @@ const config = {
   baseUrl: "https://qrmrc.vercel.app/",
   tracks,
   steps,
-  defaultState: Array(tracks).fill(Array(steps).fill(false)),
+  // each track is its own array; Array(n).fill(sharedArray) would alias one row
+  defaultState: Array.from({ length: tracks }, () => Array(steps).fill(false)),
 };
 
 export default config;

@@ -155,8 +155,9 @@ table {
   height: 500px;
 
   display: grid;
-  grid-template-columns: repeat(37, 13px);
-  grid-template-rows: repeat(37, 13px);
+  /* --qr-size is set by GridRenderer from the QR module count */
+  grid-template-columns: repeat(var(--qr-size, 37), 13px);
+  grid-template-rows: repeat(var(--qr-size, 37), 13px);
 
   /* Ensure it maintains square proportions */
   position: relative;
@@ -168,8 +169,8 @@ table {
     height: 300px;
     /* Match the width */
 
-    grid-template-columns: repeat(37, 7px);
-    grid-template-rows: repeat(37, 7px);
+    grid-template-columns: repeat(var(--qr-size, 37), 7px);
+    grid-template-rows: repeat(var(--qr-size, 37), 7px);
   }
 }
 

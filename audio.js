@@ -1,7 +1,7 @@
 /**
  * @description
  * Handles the Tone.js context: instruments and playback.
- * Accepts configuration options (steps, sequencerState, onStep).
+ * Accepts configuration options (steps, sequencerState, currentBpm, onStep).
  *
  * It no longer touches the DOM. Each tick it reports the current step over the
  * injected onStep callback; rendering the playhead is the grid's job. That
@@ -9,7 +9,7 @@
  */
 export default class AudioEngine {
   // TODO: potentially add additional instruments to audio engine based on tracks
-  constructor({ steps, sequencerState, onStep }) {
+  constructor({ steps, sequencerState, currentBpm, onStep }) {
     this.kick = new Tone.Player(
       "https://tonejs.github.io/audio/drum-samples/Kit8/kick.mp3"
     ).toDestination();
@@ -25,7 +25,7 @@ export default class AudioEngine {
 
     this.isPlaying = false;
     this.loop = null;
-    this.bpm = 150;
+    this.bpm = currentBpm;
     this.steps = steps;
     this.sequencerState = sequencerState;
 

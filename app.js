@@ -10,7 +10,8 @@ import StateCodec from "./stateCodec.js";
 /**
  * @description
  * Composition root. Constructs the modules, injects their dependencies, and
- * wires the edit and playback flows. Holds no geometry or URL magic of its own.
+ * wires the edit, BPM, and playback flows. Holds no geometry or URL magic of
+ * its own.
  */
 class App {
   constructor(options) {
@@ -59,11 +60,14 @@ class App {
       qrNodes: this.qrCode.getQRNodes(),
       sequencerState: this.sequencerState,
       onStepToggled: this.onStepToggled.bind(this),
+      currentBpm: 120,
+      onBpmChanged: this.onBpmChanged.bind(this),
     });
 
     this.audioEngine = new AudioEngine({
       steps: this.options.steps,
       sequencerState: this.sequencerState,
+      currentBpm: this.grid.currentBpm,
       onStep: (step) => this.grid.setPlayhead(step),
     });
   }
@@ -79,6 +83,16 @@ class App {
     this.urlManager.save(this.sequencerState.getState());
     const qrNodes = this.qrCode.update(this.urlManager.getCurrentUrl());
     this.grid.render(qrNodes);
+  }
+
+  /**
+   * @description
+   * Handles BPM changes from the slider by updating the audio engine tempo.
+   */
+  onBpmChanged(newBpm) {
+    if (this.audioEngine) {
+      this.audioEngine.bpm = newBpm;
+    }
   }
 }
 

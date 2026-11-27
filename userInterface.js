@@ -1,13 +1,23 @@
 /**
  * @description
- * Handles rendering the UI: the QR code pixels, the sequencer grid, and the
- * playback playhead. All cell geometry comes from an injected GridGeometry, so
- * this module holds no coordinate magic numbers of its own.
+ * Handles rendering the UI: the QR code pixels, the sequencer grid, the BPM
+ * slider, and the playback playhead. All sequencer cell geometry comes from an
+ * injected GridGeometry, so this module holds no coordinate magic numbers of
+ * its own for the sequencer. (The BPM slider still carries its own position;
+ * folding that into GridGeometry is a natural follow-up.)
  *
- * Accepts: geometry, qrNodes, sequencerState, onStepToggled.
+ * Accepts: geometry, qrNodes, sequencerState, onStepToggled, currentBpm,
+ * onBpmChanged.
  */
 export default class GridRenderer {
-  constructor({ geometry, qrNodes, sequencerState, onStepToggled }) {
+  constructor({
+    geometry,
+    qrNodes,
+    sequencerState,
+    onStepToggled,
+    currentBpm,
+    onBpmChanged,
+  }) {
     this.container = document.getElementById("container");
     this.geometry = geometry;
     this.qrNodes = qrNodes;
@@ -17,6 +27,11 @@ export default class GridRenderer {
     // It produces side effects (state -> url -> qr -> re-render); GridRenderer
     // only reports which step the user toggled.
     this.onStepToggled = onStepToggled;
+
+    // onBpmChanged is passed in from the App class to handle BPM changes
+    this.onBpmChanged = onBpmChanged;
+    // stored so the slider keeps its value across QR refreshes
+    this.currentBpm = currentBpm;
 
     // cells currently lit by the playhead, so we can clear them next tick
     this._playheadCells = [];
@@ -41,8 +56,8 @@ export default class GridRenderer {
 
   /**
    * @description
-   * Renders the grid: for every cell, ask the geometry what it is and build the
-   * matching element.
+   * Renders the grid: the BPM slider takes priority at its position, otherwise
+   * ask the geometry what each cell is and build the matching element.
    */
   renderGrid() {
     if (!this.container) {
@@ -56,18 +71,22 @@ export default class GridRenderer {
     for (let row = 0; row < size; row++) {
       for (let col = 0; col < size; col++) {
         let element;
-        switch (this.geometry.cellKind(row, col)) {
-          case "border":
-            element = this.getBorderElement();
-            break;
-          case "spacer":
-            element = this.getSpacerElement();
-            break;
-          case "step":
-            element = this.getStepButton(row, col);
-            break;
-          default:
-            element = this.getQRNode(row, col);
+        if (this.isBpmSlider(row, col)) {
+          element = this.getBpmSliderElement();
+        } else {
+          switch (this.geometry.cellKind(row, col)) {
+            case "border":
+              element = this.getBorderElement();
+              break;
+            case "spacer":
+              element = this.getSpacerElement();
+              break;
+            case "step":
+              element = this.getStepButton(row, col);
+              break;
+            default:
+              element = this.getQRNode(row, col);
+          }
         }
         element.setAttribute("data-column", col);
         this.container.appendChild(element);
@@ -136,6 +155,57 @@ export default class GridRenderer {
     spacer.classList.add("spacer");
     spacer.setAttribute("aria-hidden", "true");
     return spacer;
+  }
+
+  getBpmSliderElement() {
+    // Create a container for the vertical slider
+    const sliderContainer = document.createElement("div");
+    sliderContainer.classList.add("bpm-slider-container");
+
+    // Create the actual range input
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = "80";
+    slider.max = "200";
+    slider.value = this.currentBpm.toString(); // Use stored BPM value
+    slider.classList.add("bpm-slider-input");
+    slider.setAttribute("aria-label", "BPM Slider");
+
+    slider.addEventListener("input", (e) => {
+      this.currentBpm = parseInt(e.target.value); // Store the new BPM value
+      if (this.onBpmChanged) {
+        this.onBpmChanged(this.currentBpm);
+      }
+    });
+
+    sliderContainer.appendChild(slider);
+    return sliderContainer;
+  }
+
+  // BPM slider position: a single column just left of the sequencer block
+  getBpmSliderPosition() {
+    return {
+      startRow: 7,
+      endRow: 15,
+      startCol: 7,
+      endCol: 7,
+    };
+  }
+
+  isInBpmSliderArea(row, col) {
+    const { startRow, endRow, startCol, endCol } = this.getBpmSliderPosition();
+    return col >= startCol && col <= endCol && row >= startRow && row <= endRow;
+  }
+
+  isBpmSlider(row, col) {
+    const { startRow, endRow, startCol, endCol } = this.getBpmSliderPosition();
+    return (
+      (col === startCol ||
+        col === endCol ||
+        row === startRow ||
+        row === endRow) &&
+      this.isInBpmSliderArea(row, col)
+    );
   }
 
   // toggles class for visual feedback of active step

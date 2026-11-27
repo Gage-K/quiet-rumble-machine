@@ -1,11 +1,15 @@
 /**
  * @description
- * Handles the Tone.js context, including playback and instruments
- * Accepts configuration options (number of tracks, number of steps, and sequencerState)
+ * Handles the Tone.js context: instruments and playback.
+ * Accepts configuration options (steps, sequencerState, onStep).
+ *
+ * It no longer touches the DOM. Each tick it reports the current step over the
+ * injected onStep callback; rendering the playhead is the grid's job. That
+ * keeps playback free of grid geometry and testable without a document.
  */
 export default class AudioEngine {
-  // TODO: potentiall add additional instruments to audio engine based on tracks
-  constructor({ tracks, steps, sequencerState }) {
+  // TODO: potentially add additional instruments to audio engine based on tracks
+  constructor({ steps, sequencerState, onStep }) {
     this.kick = new Tone.Player(
       "https://tonejs.github.io/audio/drum-samples/Kit8/kick.mp3"
     ).toDestination();
@@ -22,17 +26,18 @@ export default class AudioEngine {
     this.isPlaying = false;
     this.loop = null;
     this.bpm = 150;
-    this.tracks = tracks;
     this.steps = steps;
     this.sequencerState = sequencerState;
+
+    // reports the current step each tick (and null on stop); the grid renders it
+    this.onStep = onStep;
   }
 
   /**
    * @description
-   * Starts the playback of the sequencer
-   * Disposes of loop if it exists (prevents multiple loops from playing)
-   * Loops through the sequencer state and plays the appropriate instruments
-   * Updates the color of the grid based on the current step
+   * Starts the playback of the sequencer.
+   * Disposes of any existing loop (prevents multiple loops from playing).
+   * Each tick, reports the current step and plays the active instruments.
    */
   startPlayback() {
     if (this.loop) {
@@ -42,29 +47,11 @@ export default class AudioEngine {
 
     this.loop = new Tone.Loop((time) => {
       this.isPlaying = true;
-      // steping colorz
-      const getVisualColumnIndex = (step) => {
-        // If step is past the spacer position, add 1 to skip over it
-        // Assuming spacer is at position 8 (between step 7 and 8)
-        return step >= 8 ? step + 11 : step + 10;
-      };
 
-      // Stepping colorz
-      const prevStepIndex = (stepIndex - 1 + this.steps) % this.steps;
-
-      const currentColIndex = getVisualColumnIndex(stepIndex);
-      const lastColIndex = getVisualColumnIndex(prevStepIndex);
-
-      const currentCols = document.querySelectorAll(
-        `[data-column='${currentColIndex}']`
-      );
-      const lastCols = document.querySelectorAll(
-        `[data-column='${lastColIndex}']`
-      );
-
-      // TODO: move this to the userInterface class (?)
-      currentCols.forEach((node) => node.classList.add("invertColors"));
-      lastCols.forEach((node) => node.classList.remove("invertColors"));
+      // report the playhead position; the grid owns the visual update
+      if (this.onStep) {
+        this.onStep(stepIndex);
+      }
 
       // Sequencer playback
       if (this.sequencerState.getStep(0, stepIndex)) {
@@ -89,8 +76,7 @@ export default class AudioEngine {
 
   /**
    * @description
-   * Stops the playback of the sequencer by disposing of transport
-   * Clears the color of the grid based on the current step
+   * Stops playback by disposing of the loop and clears the playhead.
    */
   stopPlayback() {
     if (this.loop) {
@@ -99,12 +85,14 @@ export default class AudioEngine {
       this.loop = null;
     }
     Tone.getTransport().stop();
-    // clear the colorz
-    const colors = document.querySelectorAll(".invertColors");
-    colors.forEach((node) => node.classList.remove("invertColors"));
+
+    // clear the playhead via the same seam the grid listens on
+    if (this.onStep) {
+      this.onStep(null);
+    }
   }
 
-  // note: bpm change does not halt audio playback, but it does change the tempo of the sequencer
+  // note: bpm change does not halt audio playback, but it does change the tempo
   set bpm(value) {
     this._bpm = value;
     Tone.getTransport().bpm.value = this._bpm;

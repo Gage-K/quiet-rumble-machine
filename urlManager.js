@@ -1,21 +1,27 @@
-import { encodeToHex, decodeFromHex } from "./encoding.js";
-
 /**
  * @description
- * Manages the URL and state serialization of the app
- * Accepts base url from configuration options and updates browser url on state change with hash
+ * Manages the URL and state serialization of the app.
+ * Accepts a base url and a StateCodec (injected, not created here) and keeps
+ * the browser hash in sync with the sequencer state. It also owns URL
+ * assembly, so callers never string-concatenate the base and hash themselves.
  */
 export default class URLManager {
-  constructor({ url }) {
-    // source of truth is the browser url, so we need to sync the url state to the browser url
+  constructor({ url, codec }) {
+    // source of truth is the browser url, so we sync state to the browser hash
     this._baseUrl = url
       ? url.split("#")[0]
       : window.location.origin + window.location.pathname;
+    this._codec = codec;
   }
 
   // url before hash
   getBaseUrl() {
     return this._baseUrl;
+  }
+
+  // full current url: base + live hash. The one place base and hash are joined.
+  getCurrentUrl() {
+    return this._baseUrl + this.getHash();
   }
 
   // hash after '#' in url
@@ -30,10 +36,15 @@ export default class URLManager {
     window.location.hash = hash.startsWith("#") ? hash : `#${hash}`;
   }
 
+  // true when the browser hash carries a serialized state
+  hasState() {
+    return window.location.hash.length > 2;
+  }
+
   /**
    * @description
-   * Decodes the hash (containing the serialized state) to get the state
-   * Returns null if no hash is found
+   * Decodes the hash (containing the serialized state) to get the state.
+   * Returns null if no hash is found.
    */
   getStateFromHash() {
     const hash = this.getHash();
@@ -45,11 +56,11 @@ export default class URLManager {
     }
 
     // substring removes the # from the hash
-    return decodeFromHex(hash.substring(1));
+    return this._codec.decode(hash.substring(1));
   }
 
-  setStateToHash(state) {
-    const encodedState = encodeToHex(state);
-    this.setHash(encodedState);
+  // serialize state into the browser hash
+  save(state) {
+    this.setHash(this._codec.encode(state));
   }
 }
